@@ -1,28 +1,15 @@
-// frontend/src/Componentes/Login/index.js
 import React, { useState } from 'react';
 import { TextField, Button, InputAdornment } from '@mui/material';
 import './imput.css';
 import Herder from '../Herder';
 import PersonIcon from '@mui/icons-material/Person';
-import axios from 'axios';
-
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleLogin = async (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
-    try {
-      const response = await axios.post('http://localhost:5000/api/login', {
-        username,
-        password,
-      });
-      console.log(response.data.message);
-      setErrorMessage('');
-    } catch (error) {
-      setErrorMessage(error.response?.data?.error || 'Erro ao fazer login');
-    }
+    console.log('Login:', { username, password });
   };
 
   return (
@@ -45,7 +32,7 @@ const Login = () => {
               style: { backgroundColor:'#ffffff', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '5px', height:'52px'}
             }}
           />
-          <label htmlFor='password' className='input-label'>Senha</label>
+          <label htmlFor='username' className='input-label'>Senha</label>
           <TextField
             type="password"
             value={password}
@@ -55,10 +42,9 @@ const Login = () => {
               style: { backgroundColor:'#ffffff', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '5px', height:'52px'}
             }}
           />
-          <Button type="submit" variant="contained" fullWidth sx={{ backgroundColor:'#6D82F7', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '40px', height:'53px'}}>
+          <Button type="submit" variant="contained" fullWidth sx={{ backgroundColor:'6D82F7', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '40px', height:'53px'}}>
             Confirmar
           </Button>
-          {errorMessage && <p style={{ color: 'red', textAlign: 'center' }}>{errorMessage}</p>}
         </form>
       </div>
     </div>
