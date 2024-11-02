@@ -1,8 +1,7 @@
-// frontend/src/Componentes/Login/index.js
 import React, { useState } from 'react';
 import { TextField, Button, InputAdornment } from '@mui/material';
 import './imput.css';
-import Herder from '../Herder';
+import Herder from '../../Herder';
 import PersonIcon from '@mui/icons-material/Person';
 import axios from 'axios';
 
@@ -14,15 +13,12 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5000/api/login', {
-        username,
-        password,
-      });
-      console.log(response.data.message);
-      setErrorMessage('');
-    } catch (error) {
-      setErrorMessage(error.response?.data?.error || 'Erro ao fazer login');
-    }
+      const response = await axios.post('http://localhost:5000/login', { username, password });
+      localStorage.setItem('token', response.data.token);
+      alert('Login successful!');
+  } catch (error) {
+      alert('Invalid credentials');
+  }
   };
 
   return (

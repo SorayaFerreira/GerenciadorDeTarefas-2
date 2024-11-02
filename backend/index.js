@@ -1,19 +1,15 @@
-const express = require('express');
-const mysql = require('mysql');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
-const app = express();
-app.use(express.json());
-
-const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'seu_usuario_mysql',
-    password: 'sua_senha_mysql',
-    database: 'users_db'
+const UserSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true }
 });
 
-db.connect(err => {
-    if (err) throw err;
-    console.log('Conectado ao banco de dados MySQL');
+UserSchema.pre('save', async function (next) {
+    this.password = await bcrypt.hash(this.password, 10);
+    next();
 });
+
+const User = mongoose.model('User', UserSchema);
+module.exports = User;
