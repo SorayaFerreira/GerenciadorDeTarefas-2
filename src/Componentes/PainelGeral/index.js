@@ -12,13 +12,8 @@ import { useNavigate} from 'react-router-dom'; // Importa a função navigate do
 // Define o componente funcional PainelGeral
 const PainelGeral = () => {
     const navigate = useNavigate(''); // Define a variável navigation que armazena o estado da navegação
-    const [isExpanded, setIsExpanded] = useState(false);
     const [searchQuery, setSearchQuery] = useState(''); // Estado para o campo de busca
 
-     // Função para alternar o estado isExpanded
-    const toggleMenu = () => {
-        setIsExpanded(!isExpanded);
-    };
       
     // Função para redirecionar ao clicar no botão
     const handleNavigation = (path) => {
