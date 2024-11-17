@@ -5,8 +5,11 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 require('dotenv').config();
 
+const tarefasRoutes = require('./routes/tarefasRoutes'); 
+const auxiliaresRoutes = require('./routes/auxiliaresRoutes'); 
+
 const app = express();
-app.use(express.json()); // Middleware para processar JSON
+app.use(express.json());
 
 const cors = require('cors');
 app.use(cors());
@@ -30,7 +33,7 @@ db.connect(err => {
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
 
-    // Adicione logs para verificar o corpo da requisição
+    
     console.log('Corpo da requisição:', req.body);
     console.log('Email:', username);
     console.log('Password:', password);
@@ -46,36 +49,33 @@ app.post('/api/login', (req, res) => {
             return res.status(500).json({ error: 'Erro no servidor' });
         }
 
-        // Adicione logs para verificar os resultados da consulta
+        
         console.log('Resultados da consulta:', results);
 
         if (results.length > 0) {
             const user = results[0];
-            bcrypt.compare(password, user.password, (err, isMatch) => {
-                if (err) {
-                    console.error('Erro no servidor:', err);
-                    return res.status(500).json({ error: 'Erro no servidor' });
-                }
-
-                // Adicione logs para verificar o resultado da comparação de senhas
-                console.log('Senha correta:', isMatch);
-
-                if (isMatch) {
-                    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-                    res.status(200).json({ message: 'Login bem-sucedido!', token,  redirectUrl: '/painelGeral' });
-                } else {
-                    console.log('Senha incorreta para o usuário:', email);
-                    res.status(401).json({ error: 'Credenciais inválidas' });
-                }
-            });
+            
+           
+            if (password === user.password) {
+                const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+                res.status(200).json({ message: 'Login bem-sucedido!', token, redirectUrl: '/PainelGeral' });
+                console.log('Credenciais corretas - Requisição para Painel Geral');
+            } else {
+                console.log('Senha incorreta para o usuário:', username);  
+                res.status(401).json({ error: 'Credenciais inválidas' });
+            }
         } else {
-            console.log('Usuário não encontrado:', email);
+            console.log('Usuário não encontrado:', username);  
             res.status(401).json({ error: 'Credenciais inválidas' });
         }
+        
+           
+       
     });
 });
+app.use('/api', tarefasRoutes); 
+app.use('/api', auxiliaresRoutes);
 
-// Servir arquivos estáticos do frontend
 app.use(express.static(path.join(__dirname, '../src/build')));
 
 app.get('*', (req, res) => {
