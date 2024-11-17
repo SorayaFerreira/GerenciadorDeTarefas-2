@@ -1,61 +1,62 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { TextField, Button } from '@mui/material';
+import { TextField, Button, InputAdornment } from '@mui/material';
 import './imput.css';
 import Herder from '../Herder';
+import PersonIcon from '@mui/icons-material/Person';
+import {useNavigate} from 'react-router-dom';
+import axios from 'axios'; // Adicione esta linha para importar o axios
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [error, setError] = useState(''); // Estado para armazenar mensagens de erro
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username: email, password })
-      });
-      const data = await response.json();
-      if(response.status === 200) {
-        localStorage.setItem('token', response.data.token);
-        window.location.href = data.redirectUrl;
-      }
-    } catch (error) {
-      setErrorMessage(error.response?.data?.message || 'Erro de autenticação');
+      const response = await axios.post('http://localhost:5000/api/login', { username, password });
+      console.log('Login bem-sucedido:', response.data);
+      navigate('/painelGeral');
+    } catch (err) {
+      console.error('Erro ao fazer login:', err);
+      setError('Credenciais inválidas'); // Define a mensagem de erro
     }
   };
 
   return (
     <div>
-      <div>
-        <div className='text'>Gerenciador de Tarefas</div>
-        <form onSubmit={handleLogin}>
-          <TextField
-            label="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+      <Herder />
+      <div className="login-container">
+        <form className='bloco_login' onSubmit={handleLogin}>
+          <div className='text'>Gerenciador de Tarefas</div>
+          <label htmlFor='username' className='input-label'>Email</label>
+          <TextField 
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             fullWidth
-            required
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <PersonIcon />
+                </InputAdornment>
+              ),
+              style: { backgroundColor:'#ffffff', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '5px', height:'52px'}
+            }}
           />
+          <label htmlFor='username' className='input-label'>Senha</label>
           <TextField
-            label="Senha"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             fullWidth
-            required
+            InputProps={{
+              style: { backgroundColor:'#ffffff', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '5px', height:'52px'}
+            }}
           />
-          <Button type="submit" variant="contained" fullWidth sx={{ backgroundColor:'#6D82F7', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '40px', height:'53px'}}>
+          <Button type="submit" variant="contained" fullWidth sx={{ backgroundColor:'6D82F7', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '40px', height:'53px'}}>
             Confirmar
           </Button>
-          {errorMessage && <p style={{ color: 'red', textAlign: 'center' }}>{errorMessage}</p>}
         </form>
       </div>
     </div>
