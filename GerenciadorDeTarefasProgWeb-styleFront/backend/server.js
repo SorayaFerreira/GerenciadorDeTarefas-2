@@ -52,7 +52,7 @@ app.post('/api/login', (req, res) => {
         if (results.length > 0) {
             const user = results[0];
             
-            bcrypt.compare(password, user.senha, (err, isMatch) => {
+            bcrypt.compare(password, user.password, (err, isMatch) => {
                 if (err) {
                     console.error('Erro no servidor:', err);
                     return res.status(500).json({ error: 'Erro no servidor' });
