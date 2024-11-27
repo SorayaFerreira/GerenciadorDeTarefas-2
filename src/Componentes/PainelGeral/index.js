@@ -1,197 +1,418 @@
-import React from 'react'; // Importa a biblioteca React
-import { useState } from 'react'; // Importa o hook useState do React
-import { TextField, Button, Input, InputAdornment, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from '@mui/material'; // Importa componentes do Material-UI
-import PersonIcon from '@mui/icons-material/Person'; // Importa o ícone Person do Material-UI
-import HomeIcon from '@mui/icons-material/Home'; // Importa o ícone Home do Material-UI
-import BookIcon from '@mui/icons-material/Book'; // Importa o ícone Book do Material-UI
-import NotificationsIcon from '@mui/icons-material/Notifications'; // Importa o ícone Notifications do Material-UI
-import ExitToAppIcon from '@mui/icons-material/ExitToApp'; // Importa o ícone ExitToApp do Material-UI
-import './PainelGeral.css'; // Importa o arquivo CSS para estilização
-import { useNavigate} from 'react-router-dom'; // Importa a função navigate do pacote @reach/router
-import SearchIcon from '@mui/icons-material/Search'; // Importa o ícone Search do Material-UI
-import AddIcon from '@mui/icons-material/Add'; // Importa o ícone Add do Material-UI
-import FilterListIcon from '@mui/icons-material/FilterList'; // Importa o ícone FilterList do Material-UI
-import IconButton from '@mui/material/IconButton'; // Importa o componente IconButton do Material-UI
-import { Select, MenuItem, FormControl, InputLabel, Box} from '@mui/material';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import 'resize-observer-polyfill'; // Importa o pacote resize-observer-polyfill
+import React, { useState, useEffect } from 'react';
+import { TextField, Button, InputAdornment, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Select, MenuItem, FormControl, InputLabel, Box, Menu, MenuItem as MenuItemMUI, Switch, FormControlLabel, Checkbox, FormGroup } from '@mui/material';
+import { Person as PersonIcon, Home as HomeIcon, Book as BookIcon, Notifications as NotificationsIcon, ExitToApp as ExitToAppIcon, Search as SearchIcon, Add as AddIcon, FilterList as FilterListIcon, CalendarToday as CalendarTodayIcon, Assignment as AssignmentIcon, MoreHoriz as MoreHoriIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import './PainelGeral.css';
+import 'resize-observer-polyfill';
 
+const ITEMS_PER_PAGE = 6;
 
-// Define o componente funcional PainelGeral
 const PainelGeral = () => {
-    const navigate = useNavigate(''); // Define a variável navigation que armazena o estado da navegação
-    const [searchQuery, setSearchQuery] = useState(''); // Estado para o campo de busca
-
+    const navigate = useNavigate('');
+    const [searchQuery, setSearchQuery] = useState('');
     const [open, setOpen] = useState(false);
+    const [priority, setPriority] = useState('');
+    const [tasks, setTasks] = useState(() => {
+        const savedTasks = localStorage.getItem('tasks');
+        return savedTasks ? JSON.parse(savedTasks) : [];
+    });
+    const [taskName, setTaskName] = useState('');
+    const [taskDescription, setTaskDescription] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [selectedTask, setSelectedTask] = useState(null);
+    const [viewTask, setViewTask] = useState(null);
+    const [history, setHistory] = useState(() => {
+        const savedHistory = localStorage.getItem('history');
+        return savedHistory ? JSON.parse(savedHistory) : [];
+    });
+    const [viewingHistory, setViewingHistory] = useState(false);
+    const [filterOpen, setFilterOpen] = useState(false);
+    const [filterPriority, setFilterPriority] = useState('');
+    const [filterStatus, setFilterStatus] = useState({
+        aFazer: true,
+        concluido: true,
+    });
+
+    useEffect(() => {
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+    }, [tasks]);
+
+    useEffect(() => {
+        localStorage.setItem('history', JSON.stringify(history));
+    }, [history]);
+
+    const totalPages = Math.ceil((viewingHistory ? history : tasks).length / ITEMS_PER_PAGE);
+
+    const handlePreviousPage = () => {
+        setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
+    };
+
+    const handleNextPage = () => {
+        setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));
+    };
+
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const selectedTasks = (viewingHistory ? history : tasks).slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
     const handleClickOpen = () => {
-    setOpen(true);
+        setOpen(true);
     };
 
     const handleClose = () => {
-    setOpen(false);
+        setOpen(false);
     };
-
-    const [priority, setPriority] = useState('');
 
     const handlePriorityChange = (event) => {
-    setPriority(event.target.value);
+        setPriority(event.target.value);
     };
-      
-    // Função para redirecionar ao clicar no botão
+
     const handleNavigation = (path) => {
+        if (path === '/historico') {
+            setViewingHistory(true);
+        } else {
+            setViewingHistory(false);
+        }
         navigate(path);
     };
 
-    // Função para lidar com a mudança no campo de busca
     const handleSearchChange = (e) => {
         setSearchQuery(e.target.value);
     };
 
+    const handleTaskNameChange = (e) => {
+        setTaskName(e.target.value);
+    };
+
+    const handleTaskDescriptionChange = (e) => {
+        setTaskDescription(e.target.value);
+    };
+
+    const handleConfirm = () => {
+        const newTask = {
+            name: taskName,
+            description: taskDescription,
+            priority: priority,
+            status: 'A Fazer'
+        };
+        setTasks([...tasks, newTask]);
+        setTaskName('');
+        setTaskDescription('');
+        setPriority('');
+        handleClose();
+    };
+
+    const handleMenuClick = (event, task) => {
+        setAnchorEl(event.currentTarget);
+        setSelectedTask(task);
+    };
+
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+        setSelectedTask(null);
+    };
+
+    const handleViewTask = (task) => {
+        setViewTask(task);
+    };
+
+    const handleEditTask = () => {
+        setTaskName(selectedTask.name);
+        setTaskDescription(selectedTask.description);
+        setPriority(selectedTask.priority);
+        setTasks(tasks.filter(task => task !== selectedTask));
+        handleMenuClose();
+        setOpen(true);
+    };
+
+    const handleDeleteTask = () => {
+        setTasks(tasks.filter(task => task !== selectedTask));
+        handleMenuClose();
+    };
+
+    const handleStatusChange = (task) => {
+        const updatedTasks = tasks.map(t => {
+            if (t === task) {
+                const updatedTask = { ...t, status: t.status === 'A Fazer' ? 'Concluído' : 'A Fazer' };
+                if (updatedTask.status === 'Concluído') {
+                    setHistory([...history, updatedTask]);
+                }
+                return updatedTask;
+            }
+            return t;
+        });
+        setTasks(updatedTasks);
+    };
+
+    const handleFilterClick = () => {
+        setFilterOpen(true);
+    };
+
+    const handleFilterClose = () => {
+        setFilterOpen(false);
+    };
+
+    const handleFilterPriorityChange = (event) => {
+        setFilterPriority(event.target.value);
+    };
+
+    const handleFilterStatusChange = (event) => {
+        setFilterStatus({
+            ...filterStatus,
+            [event.target.name]: event.target.checked,
+        });
+    };
+
+    const filteredTasks = tasks.filter(task => 
+        (filterPriority === '' || task.priority === filterPriority) &&
+        ((filterStatus.aFazer && task.status === 'A Fazer') || (filterStatus.concluido && task.status === 'Concluído')) &&
+        (task.name.toLowerCase().includes(searchQuery.toLowerCase()) || task.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+
+    const displayedTasks = filteredTasks.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
     if (typeof window !== 'undefined') {
         const resizeObserverErrDiv = document.createElement('div');
         const resizeObserverErrMsg = 'ResizeObserver loop limit exceeded';
-    
         window.addEventListener('error', (event) => {
             if (event.message === resizeObserverErrMsg) {
                 event.stopImmediatePropagation();
             }
         });
-    
+
         resizeObserverErrDiv.id = 'resizeObserverErrDiv';
         resizeObserverErrDiv.style.display = 'none';
         document.body.appendChild(resizeObserverErrDiv);
     }
 
-    // Retorna o JSX que define a estrutura do componente
-    return(
-        <div>
-            <div>
-                <TextField
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                    placeholder="Buscar"
-                    fullWidth
-                sx={{marginLeft: '300px', width: '18%', position: 'absolute', top: '64px', left: '10px', height: '40px', borderRadius: '10px', backgroundColor: '#ffffff'}}
-                InputProps={{
-                    endAdornment:(
-                        <InputAdornment position="end">
-                            <SearchIcon />
-                        </InputAdornment>
-                    )
-                }}
-                />
-                <IconButton
-                sx={{position:'absolute', top:'70px', left:'calc(10px + 40% + 10px)', height:'40px', borderRadius:'10px', backgroundColor:'#ffffff'}}
-                >
-                    <FilterListIcon />
-                </IconButton>
-                <Button sx={{width:'18%',height:'50px',marginLeft:'980px', top:'64px', position:'absolute', borderRadius:'10px', backgroundColor:'#6D82F7', color:'#fff'}}
-                endIcon={<AddIcon/>}
-                onClick={handleClickOpen} // Adiciona o evento de clique para abrir o modal
-                >
-                    <span>Cadastrar nova tarefa</span>
-                </Button>
-                <Dialog open={open} onClose={handleClose} sx={{'& .MuiPaper-root': {
-                border: '2px solid #6D82F7', // Define a borda do modal
-                borderRadius: '20px', // Define bordas arredondadas
-                }}}>
-                <DialogTitle sx={{backgroundColor:'#6D82F7', color:'#fff', height:'16px', paddingTop:'10px', display:'flex', alignItems:'center'}}>
-                    <AssignmentIcon sx={{ marginRight: '8px' }} />
-                    Nova Tarefa
-                    <CalendarTodayIcon sx={{ marginLeft: 'auto' }} />
-                </DialogTitle>
-                <DialogContent  sx={{ minHeight: '300px', top:'20px'}}>
-                    <TextField
-                    autoFocus
-                    margin="dense"
-                    id="name"
-                    label="Nome"
-                    type="text"
-                    fullWidth
-                    variant="outlined"
-                    />
-                    <TextField
-                    margin="dense"
-                    id="description"
-                    label="Descrição"
-                    type="text"
-                    fullWidth
-                    variant="outlined"
-                    multiline
-                    rows={4}
-                    maxRows={4}
-                    sx={{}}
-                    />
-                    <FormControl fullWidth margin="dense" variant="outlined">
-                    <InputLabel id="priority-label">Prioridade</InputLabel>
-                    <Select
-                        labelId="priority-label"
-                        id="priority"
-                        value={priority}
-                        onChange={handlePriorityChange}
-                        label="Prioridade"
-                    >
-                        <MenuItem value="alta">Alta</MenuItem>
-                        <MenuItem value="media">Média</MenuItem>
-                        <MenuItem value="baixa">Baixa</MenuItem>
-                    </Select>
-                    </FormControl>
-                </DialogContent>
-                <DialogActions>
-                    <Button 
-                    onClick={handleClose}
-                    sx={{
-                        backgroundColor: '#6D82F7',
-                        color: '#fff',
-                        position: 'relative',
-                        marginRight: '12px',
-                        width:'94%',
-                        height:'64px',
-                        borderRadius:'10px'
-                    }}
-                    >Confirmar
-                    
-                    </Button>
-                </DialogActions>
-                </Dialog>
-            </div>
-            {/* Menu lateral */}
+    return (
+        <div className="container">
             <nav className='menu_lateral'>
-               
                 <div className="profile-icon">
                     <PersonIcon />
                 </div>
-                {/* Lista de itens do menu */}
-                <ul style={{listStyleType:'none'}}className='iten-menu'> 
+                <ul style={{ listStyleType: 'none' }} className='iten-menu'>
                     <li>
-                        <Button startIcon={<HomeIcon />} sx={{color: 'black'}} onClick={() => handleNavigation('/painelGeral')}>
+                        <Button startIcon={<HomeIcon />} sx={{ color: 'black' }} onClick={() => handleNavigation('/painelGeral')}>
                             <span>Painel Geral</span>
                         </Button>
                     </li>
                     <li>
-                        <Button startIcon={<BookIcon />}sx={{color: 'black'}} onClick={() => handleNavigation('')}>
+                        <Button startIcon={<BookIcon />} sx={{ color: 'black' }} onClick={() => handleNavigation('/historico')}>
                             <span>Histórico</span>
                         </Button>
                     </li>
                     <li>
-                        <Button startIcon={<NotificationsIcon />}sx={{color: 'black'}} onClick={() => handleNavigation('')}>
+                        <Button startIcon={<NotificationsIcon />} sx={{ color: 'black' }} onClick={() => handleNavigation('')}>
                             <span>Notificações</span>
                         </Button>
                     </li>
                 </ul>
-                {/* Footer com botão de logout */}
                 <footer className="menu-footer">
-                    <Button startIcon={<ExitToAppIcon />}sx={{color: 'black'}}onClick={() => handleNavigation('/')}>
+                    <Button startIcon={<ExitToAppIcon />} sx={{ color: 'black' }} onClick={() => handleNavigation('/')}>
                         <span>Logout</span>
                     </Button>
                 </footer>
             </nav>
-            
+            <div className='painel-geral'>
+                <div>
+                    <TextField
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        placeholder="Buscar"
+                        fullWidth
+                        sx={{ marginLeft: '300px', width: '18%', position: 'absolute', top: '64px', left: '10px', height: '40px', borderRadius: '10px', backgroundColor: '#ffffff' }}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <SearchIcon />
+                                </InputAdornment>
+                            )
+                        }}
+                    />
+                    <div className="task-grid">
+                        {displayedTasks.map((task, index) => (
+                            <div key={index} className="task-card">
+                                <h3>{task.name}</h3>
+                                <footer className='card_header'>
+                                    <IconButton onClick={() => handleViewTask(task)}>
+                                        <VisibilityIcon />
+                                    </IconButton>
+                                    <IconButton onClick={(event) => handleMenuClick(event, task)} style={{ marginLeft: 'auto' }}>
+                                        <MoreHoriIcon />
+                                    </IconButton>
+                                </footer>
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            checked={task.status === 'Concluído'}
+                                            onChange={() => handleStatusChange(task)}
+                                            name="status"
+                                            color="primary"
+                                        />
+                                    }
+                                    label={task.status}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                    <div className="pagination">
+                        <button onClick={handlePreviousPage} disabled={currentPage === 1}>
+                            &lt;
+                        </button>
+                        <span>{currentPage} / {totalPages}</span>
+                        <button onClick={handleNextPage} disabled={currentPage === totalPages}>
+                            &gt;
+                        </button>
+                    </div>
+                    <IconButton
+                        sx={{ position: 'absolute', top: '70px', left: 'calc(10px + 40% + 10px)', height: '40px', borderRadius: '10px', backgroundColor: '#ffffff' }}
+                        onClick={handleFilterClick}
+                    >
+                        <FilterListIcon />
+                    </IconButton>
+                    <Button sx={{ width: '18%', height: '50px', marginLeft: '980px', top: '64px', position: 'absolute', borderRadius: '10px', backgroundColor: '#6D82F7', color: '#fff' }}
+                        endIcon={<AddIcon />}
+                        onClick={handleClickOpen}
+                    >
+                        <span>Cadastrar nova tarefa</span>
+                    </Button>
+                    <Dialog open={open} onClose={handleClose} sx={{ '& .MuiPaper-root': { border: '2px solid #6D82F7', borderRadius: '20px' } }}>
+                        <DialogTitle sx={{ backgroundColor: '#6D82F7', color: '#fff', height: '16px', paddingTop: '10px', display: 'flex', alignItems: 'center' }}>
+                            <AssignmentIcon sx={{ marginRight: '8px' }} />
+                            Nova Tarefa
+                            <CalendarTodayIcon sx={{ marginLeft: 'auto' }} />
+                        </DialogTitle>
+                        <DialogContent sx={{ minHeight: '300px', top: '20px' }}>
+                            <TextField
+                                autoFocus
+                                margin="dense"
+                                id="name"
+                                label="Nome"
+                                type="text"
+                                fullWidth
+                                variant="outlined"
+                                value={taskName}
+                                onChange={handleTaskNameChange}
+                            />
+                            <TextField
+                                margin="dense"
+                                id="description"
+                                label="Descrição"
+                                type="text"
+                                fullWidth
+                                variant="outlined"
+                                multiline
+                                rows={4}
+                                maxRows={4}
+                                value={taskDescription}
+                                onChange={handleTaskDescriptionChange}
+                            />
+                            <FormControl fullWidth margin="dense" variant="outlined">
+                                <InputLabel id="priority-label">Prioridade</InputLabel>
+                                <Select
+                                    labelId="priority-label"
+                                    id="priority"
+                                    value={priority}
+                                    onChange={handlePriorityChange}
+                                    label="Prioridade"
+                                >
+                                    <MenuItem value="alta">Alta</MenuItem>
+                                    <MenuItem value="media">Média</MenuItem>
+                                    <MenuItem value="baixa">Baixa</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button
+                                onClick={handleConfirm}
+                                sx={{
+                                    backgroundColor: '#6D82F7',
+                                    color: '#fff',
+                                    position: 'relative',
+                                    marginRight: '12px',
+                                    width: '94%',
+                                    height: '64px',
+                                    borderRadius: '10px'
+                                }}
+                            >
+                                Confirmar
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+                    <Menu
+                        anchorEl={anchorEl}
+                        open={Boolean(anchorEl)}
+                        onClose={handleMenuClose}
+                    >
+                        <MenuItemMUI onClick={handleEditTask}>Editar</MenuItemMUI>
+                        <MenuItemMUI onClick={handleDeleteTask}>Deletar</MenuItemMUI>
+                    </Menu>
+                    <Dialog open={Boolean(viewTask)} onClose={() => setViewTask(null)}>
+                        <DialogTitle>Visualizar Tarefa</DialogTitle>
+                        <DialogContent>
+                            {viewTask && (
+                                <div>
+                                    <p><strong>Nome:</strong> {viewTask.name}</p>
+                                    <p><strong>Descrição:</strong> {viewTask.description}</p>
+                                    <p><strong>Prioridade:</strong> {viewTask.priority}</p>
+                                    <p><strong>Status:</strong> {viewTask.status}</p>
+                                </div>
+                            )}
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={() => setViewTask(null)}>Fechar</Button>
+                        </DialogActions>
+                    </Dialog>
+                    <Dialog open={filterOpen} onClose={handleFilterClose}>
+                        <DialogTitle>Filtrar Tarefas</DialogTitle>
+                        <DialogContent>
+                            <FormControl fullWidth margin="dense" variant="outlined">
+                                <InputLabel id="filter-priority-label">Prioridade</InputLabel>
+                                <Select
+                                    labelId="filter-priority-label"
+                                    id="filter-priority"
+                                    value={filterPriority}
+                                    onChange={handleFilterPriorityChange}
+                                    label="Prioridade"
+                                >
+                                    <MenuItem value="">Todas</MenuItem>
+                                    <MenuItem value="alta">Alta</MenuItem>
+                                    <MenuItem value="media">Média</MenuItem>
+                                    <MenuItem value="baixa">Baixa</MenuItem>
+                                </Select>
+                            </FormControl>
+                            <FormGroup>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={filterStatus.aFazer}
+                                            onChange={handleFilterStatusChange}
+                                            name="aFazer"
+                                        />
+                                    }
+                                    label="A Fazer"
+                                />
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={filterStatus.concluido}
+                                            onChange={handleFilterStatusChange}
+                                            name="concluido"
+                                        />
+                                    }
+                                    label="Concluído"
+                                />
+                            </FormGroup>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={handleFilterClose}>Fechar</Button>
+                        </DialogActions>
+                    </Dialog>
+                </div>
+            </div>
         </div>
-    )
+    );
 };
 
-// Exporta o componente PainelGeral como padrão
 export default PainelGeral;
