@@ -1,38 +1,27 @@
-// backend/routes/auth.js
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const db = require('../config/db');
-const router = express.Router();
-require('dotenv').config();
+router.post('/login', async (req, res) => {
+  const { username, password } = req.body;
 
-// Rota de login
-router.post('/login', (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const query = 'SELECT * FROM users WHERE email = ?';
+    db.query(query, [username], async (err, results) => {
+      if (err) return res.status(500).send({ message: 'Erro no servidor' });
 
-  // Consulta o usuário pelo email
-  const query = 'SELECT * FROM users WHERE email = ?';
-  db.query(query, [email], async (err, results) => {
-    if (err) return res.status(500).send({ message: 'Erro no servidor' });
+      if (results.length === 0) {
+        return res.status(401).send({ message: 'Usuário não encontrado' });
+      }
 
-    if (results.length === 0) {
-      return res.status(401).send({ message: 'Usuário não encontrado' });
-    }
+      const user = results[0];
+      const isMatch = await bcrypt.compare(password, user.password);
 
-    const user = results[0];
-    const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(401).send({ message: 'Senha incorreta' });
+      }
 
-    if (!isMatch) {
-      return res.status(401).send({ message: 'Senha incorreta' });
-    }
-
-    // Criação do token JWT
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: '1h',
+      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      res.status(200).send({ message: 'Login bem-sucedido', token, user_id: user.id });
     });
-
-    res.status(200).send({ message: 'Login bem-sucedido', token });
-  });
+  } catch (error) {
+    console.error('Erro ao fazer login:', error);
+    res.status(500).send({ message: 'Erro no servidor' });
+  }
 });
-
-module.exports = router;

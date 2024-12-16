@@ -17,11 +17,15 @@ const Login = () => {
     try {
       const response = await axios.post('http://localhost:5000/api/login', { username, password });
       console.log('Login bem-sucedido:', response.data);
+      localStorage.setItem('token', response.data.token);
       navigate('/painelGeral');
     } catch (err) {
       console.error('Erro ao fazer login:', err);
       setError('Credenciais inválidas'); // Define a mensagem de erro
     }
+  };
+  const handleRegisterClick = () => {
+    navigate('/cadastroUsuario');
   };
 
   return (
@@ -57,6 +61,7 @@ const Login = () => {
           <Button type="submit" variant="contained" fullWidth sx={{ backgroundColor:'6D82F7', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '40px', height:'53px'}}>
             Confirmar
           </Button>
+          <a onClick={handleRegisterClick} style={{ cursor: 'pointer', color: '#6D82F7', marginLeft: '45px', marginTop: '20px', display: 'block' }}>Cadastre-se</a>
         </form>
       </div>
     </div>

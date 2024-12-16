@@ -1,10 +1,4 @@
-require('dotenv').config();
-const mysql = require('mysql2');
-
-console.log("DB_HOST:", process.env.DB_HOST);
-console.log("DB_USER:", process.env.DB_USER);
-console.log("DB_PASSWORD:", process.env.DB_PASSWORD);
-console.log("DB_NAME:", process.env.DB_NAME);
+const mysql = require('mysql');
 
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
@@ -16,9 +10,31 @@ const db = mysql.createConnection({
 db.connect((err) => {
   if (err) {
     console.error('Erro ao conectar ao banco de dados:', err);
-  } else {
-    console.log('Conectado ao banco de dados MySQL.');
+    return;
   }
+  else{
+    console.log('Conectado ao banco de dados.');
+  }
+
+  // Verificar se a tabela 'tasks' existe e criar se não existir
+  const createTasksTableQuery = `
+    CREATE TABLE IF NOT EXISTS tasks (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      priority INT,
+      user_id INT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+
+  db.query(createTasksTableQuery, (err, result) => {
+    if (err) {
+      console.error('Erro ao criar tabela tasks:', err);
+      return;
+    }
+    console.log('Tabela tasks verificada/criada com sucesso.');
+  });
 });
 
 module.exports = db;

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { TextField, Button, InputAdornment, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Select, MenuItem, FormControl, InputLabel, Box, Menu, MenuItem as MenuItemMUI, Switch, FormControlLabel, Checkbox, FormGroup } from '@mui/material';
 import { Person as PersonIcon, Home as HomeIcon, Book as BookIcon, Notifications as NotificationsIcon, ExitToApp as ExitToAppIcon, Search as SearchIcon, Add as AddIcon, FilterList as FilterListIcon, CalendarToday as CalendarTodayIcon, Assignment as AssignmentIcon, MoreHoriz as MoreHoriIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './PainelGeral.css';
 import 'resize-observer-polyfill';
 
@@ -12,20 +13,14 @@ const PainelGeral = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [open, setOpen] = useState(false);
     const [priority, setPriority] = useState('');
-    const [tasks, setTasks] = useState(() => {
-        const savedTasks = localStorage.getItem('tasks');
-        return savedTasks ? JSON.parse(savedTasks) : [];
-    });
+    const [tasks, setTasks] = useState([]);
     const [taskName, setTaskName] = useState('');
     const [taskDescription, setTaskDescription] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedTask, setSelectedTask] = useState(null);
     const [viewTask, setViewTask] = useState(null);
-    const [history, setHistory] = useState(() => {
-        const savedHistory = localStorage.getItem('history');
-        return savedHistory ? JSON.parse(savedHistory) : [];
-    });
+    const [history, setHistory] = useState([]);
     const [viewingHistory, setViewingHistory] = useState(false);
     const [filterOpen, setFilterOpen] = useState(false);
     const [filterPriority, setFilterPriority] = useState('');
@@ -35,12 +30,29 @@ const PainelGeral = () => {
     });
 
     useEffect(() => {
-        localStorage.setItem('tasks', JSON.stringify(tasks));
-    }, [tasks]);
-
-    useEffect(() => {
-        localStorage.setItem('history', JSON.stringify(history));
-    }, [history]);
+        const fetchTasks = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                console.log('Token:', token); // Adicionado para depuração
+                if (!token) {
+                    console.error('Token não encontrado');
+                    return;
+                }
+    
+                const response = await axios.get('http://localhost:5000/api/tasks', {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                console.log('Tarefas recebidas:', response.data); // Adicionado para depuração
+                setTasks(response.data);
+            } catch (error) {
+                console.error('Erro ao obter tarefas:', error);
+            }
+        };
+    
+        fetchTasks();
+    }, []);
 
     const totalPages = Math.ceil((viewingHistory ? history : tasks).length / ITEMS_PER_PAGE);
 
@@ -53,7 +65,6 @@ const PainelGeral = () => {
     };
 
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const selectedTasks = (viewingHistory ? history : tasks).slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -88,19 +99,45 @@ const PainelGeral = () => {
         setTaskDescription(e.target.value);
     };
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         const newTask = {
             name: taskName,
             description: taskDescription,
-            priority: priority,
-            status: 'A Fazer'
+            priority: priority
         };
-        setTasks([...tasks, newTask]);
-        setTaskName('');
-        setTaskDescription('');
-        setPriority('');
-        handleClose();
+    
+        if (!taskName || !taskDescription || !priority) {
+            console.error('Todos os campos são obrigatórios');
+            return;
+        }
+    
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('Token não encontrado');
+                return;
+            }
+    
+            const response = await axios.post('http://localhost:5000/api/tasks', newTask, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            console.log('Nova tarefa criada:', response.data); // Adicionado para depuração
+            setTasks((prevTasks) => [...prevTasks, response.data]);
+            console.log('Estado tasks atualizado:', [...tasks, response.data]); // Adicionado para depuração
+            setTaskName('');
+            setTaskDescription('');
+            setPriority('');
+            handleClose();
+        } catch (error) {
+            console.error('Erro ao criar tarefa:', error);
+        }
     };
+    // Verificação se as tarefas estão sendo renderizadas corretamente
+    useEffect(() => {
+        console.log('Tarefas renderizadas:', tasks); // Adicionado para depuração
+    }, [tasks]);
 
     const handleMenuClick = (event, task) => {
         setAnchorEl(event.currentTarget);
@@ -125,9 +162,18 @@ const PainelGeral = () => {
         setOpen(true);
     };
 
-    const handleDeleteTask = () => {
-        setTasks(tasks.filter(task => task !== selectedTask));
-        handleMenuClose();
+    const handleDeleteTask = async () => {
+        try {
+            await axios.delete(`http://localhost:5000/api/tasks/${selectedTask.id}`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            setTasks(tasks.filter(task => task !== selectedTask));
+            handleMenuClose();
+        } catch (error) {
+            console.error('Erro ao deletar tarefa:', error);
+        }
     };
 
     const handleStatusChange = (task) => {
@@ -169,7 +215,11 @@ const PainelGeral = () => {
         (task.name.toLowerCase().includes(searchQuery.toLowerCase()) || task.description.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
+    console.log('Tarefas filtradas:', filteredTasks); // Adicionado para depuração
+
     const displayedTasks = filteredTasks.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+    console.log('Tarefas exibidas:', displayedTasks); // Adicionado para depuração
 
     if (typeof window !== 'undefined') {
         const resizeObserverErrDiv = document.createElement('div');
@@ -184,6 +234,7 @@ const PainelGeral = () => {
         resizeObserverErrDiv.style.display = 'none';
         document.body.appendChild(resizeObserverErrDiv);
     }
+    console.log('Tarefas exibidas:', displayedTasks); // Adicionado para depuração
 
     return (
         <div className="container">
@@ -231,6 +282,7 @@ const PainelGeral = () => {
                         }}
                     />
                     <div className="task-grid">
+        
                         {displayedTasks.map((task, index) => (
                             <div key={index} className="task-card">
                                 <h3>{task.name}</h3>
