@@ -29,7 +29,6 @@ const PainelGeral = () => {
         concluido: true,
     });
 
-    useEffect(() => {
         const fetchTasks = async () => {
             try {
                 const token = localStorage.getItem('token');
@@ -45,12 +44,12 @@ const PainelGeral = () => {
                     }
                 });
                 console.log('Tarefas recebidas:', response.data); // Adicionado para depuração
-                setTasks(response.data);
+                setDisplayedTasks(response.data);
             } catch (error) {
                 console.error('Erro ao obter tarefas:', error);
             }
         };
-    
+    useEffect(() => {
         fetchTasks();
     }, []);
 
@@ -64,7 +63,7 @@ const PainelGeral = () => {
         setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));
     };
 
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -125,7 +124,7 @@ const PainelGeral = () => {
             });
             console.log('Nova tarefa criada:', response.data); // Adicionado para depuração
             setTasks((prevTasks) => [...prevTasks, response.data]);
-            console.log('Estado tasks atualizado:', [...tasks, response.data]); // Adicionado para depuração
+            console.log('Estado tasks atualizado:', (prevTasks) => [...prevTasks, response.data]); // Adicionado para depuração
             setTaskName('');
             setTaskDescription('');
             setPriority('');
@@ -153,16 +152,25 @@ const PainelGeral = () => {
         setViewTask(task);
     };
 
-    const handleEditTask = () => {
-        setTaskName(selectedTask.name);
-        setTaskDescription(selectedTask.description);
-        setPriority(selectedTask.priority);
-        setTasks(tasks.filter(task => task !== selectedTask));
-        handleMenuClose();
-        setOpen(true);
+    const handleEditTask = async (updatedTask) => {
+        console.log('Selected task to edit:', selectedTask); // Adicionado para depuração
+        try {
+            await axios.put(`http://localhost:5000/api/tasks/${selectedTask.id}`, updatedTask, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            setTasks(tasks.map(task => task.id === selectedTask.id ? updatedTask : task));
+            handleMenuClose();
+        } catch (error) {
+            console.error('Erro ao editar tarefa:', error);
+        }
     };
 
+
+
     const handleDeleteTask = async () => {
+        console.log('Selected task to delete:', selectedTask); // Adicionado para depuração
         try {
             await axios.delete(`http://localhost:5000/api/tasks/${selectedTask.id}`, {
                 headers: {
@@ -176,18 +184,23 @@ const PainelGeral = () => {
         }
     };
 
-    const handleStatusChange = (task) => {
-        const updatedTasks = tasks.map(t => {
-            if (t === task) {
-                const updatedTask = { ...t, status: t.status === 'A Fazer' ? 'Concluído' : 'A Fazer' };
-                if (updatedTask.status === 'Concluído') {
-                    setHistory([...history, updatedTask]);
+    const handleStatusChange = async (task) => {
+        const updatedTasks = { ...task, status: task.status === 'A Fazer' ? 'Concluído' : 'A Fazer' };
+        console.log('Atualizando tarefa:', updatedTasks); // Adicionado para depuração   
+        try {
+            const response = await axios.put(`http://localhost:5000/api/tasks/${task.id}`, updatedTasks, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
                 }
-                return updatedTask;
+            });
+            console.log('Resposta do servidor:', response.data); // Adicionado para depuração
+            setTasks(tasks.map(t => t.id === task.id ? updatedTasks : t));
+            if (viewTask && viewTask.id === task.id) {
+                setViewTask(updatedTasks); // Atualize o estado da tarefa visualizada
             }
-            return t;
-        });
-        setTasks(updatedTasks);
+        } catch (error) {
+            console.error('Erro ao atualizar status da tarefa:', error);
+        }
     };
 
     const handleFilterClick = () => {
@@ -217,9 +230,9 @@ const PainelGeral = () => {
 
     console.log('Tarefas filtradas:', filteredTasks); // Adicionado para depuração
 
-    const displayedTasks = filteredTasks.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const [displayedTasks, setDisplayedTasks] = useState([]);
 
-    console.log('Tarefas exibidas:', displayedTasks); // Adicionado para depuração
 
     if (typeof window !== 'undefined') {
         const resizeObserverErrDiv = document.createElement('div');
@@ -304,6 +317,7 @@ const PainelGeral = () => {
                                         />
                                     }
                                     label={task.status}
+                                    
                                 />
                             </div>
                         ))}
