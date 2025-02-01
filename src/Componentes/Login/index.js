@@ -29,11 +29,11 @@ const Login = () => {
   };
 
   return (
-    <div>
-      <Herder />
+    <div className='body'>
+      <img src='./img/imgFundo.jpeg' alt="Imagem de Login" className="login-image"/>
       <div className="login-container">
         <form className='bloco_login' onSubmit={handleLogin}>
-          <div className='text'>Gerenciador de Tarefas</div>
+          <div className='text'>Tasky</div>
           <label htmlFor='username' className='input-label'>Email</label>
           <TextField 
             value={username}

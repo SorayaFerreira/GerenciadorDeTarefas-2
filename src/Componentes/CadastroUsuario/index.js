@@ -35,13 +35,14 @@ const CadastroUsuario = () => {
 
   return (
     <div>
-      <Herder />
+      <img src='./img/imgFundo.jpeg' alt="Imagem de Login" className="login-image"/>
       <div className="login-container">
         <form className='bloco_login' onSubmit={handleSubmit}>
-          <div className='text'>Novo Usuário</div>
-          <label htmlFor='username' className='input-label'>Email</label>
+          <div className='text'>Tasky</div>
+
           <TextField 
             value={username}
+            placeholder='Email'
             onChange={(e) => setUsername(e.target.value)}
             fullWidth
             InputProps={{
@@ -50,45 +51,31 @@ const CadastroUsuario = () => {
                   <PersonIcon />
                 </InputAdornment>
               ),
-              style: { backgroundColor:'#ffffff', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '5px', height:'52px'}
+              style: { backgroundColor:'#ffffff', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '2%', height:'52px'}
             }}
           />
-          <label htmlFor='confirmUsername' className='input-label'>Confirmar Email</label>
-          <TextField 
-            value={confirmUsername}
-            onChange={(e) => setConfirmUsername(e.target.value)}
-            fullWidth
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <PersonIcon />
-                </InputAdornment>
-              ),
-              style: { backgroundColor:'#ffffff', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '5px', height:'52px'}
-            }}
-          />
-          <label htmlFor='password' className='input-label'>Senha</label>
           <TextField
             type="password"
+            placeholder='Senha'
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             fullWidth
             InputProps={{
-              style: { backgroundColor:'#ffffff', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '5px', height:'52px'}
+              style: { backgroundColor:'#ffffff', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '5%', height:'52px'}
             }}
           />
-          <label htmlFor='confirmPassword' className='input-label'>Confirmar Senha</label>
           <TextField
             type="password"
+            placeholder='Confirmar Senha'
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             fullWidth
             InputProps={{
-              style: { backgroundColor:'#ffffff', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '5px', height:'52px'}
+              style: { backgroundColor:'#ffffff', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '5%', height:'52px'}
             }}
           />
           {error && <div style={{ color: 'red', marginLeft: '45px', marginTop: '5px' }}>{error}</div>}
-          <Button type="submit" variant="contained" fullWidth sx={{ backgroundColor:'6D82F7', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '40px', height:'53px'}}>
+          <Button type="submit" variant="contained" fullWidth sx={{ backgroundColor:'6D82F7', borderRadius: '10px', width: '80%', marginLeft: '45px', marginTop: '14%', height:'53px'}}>
             Cadastre-se
           </Button>
         </form>
