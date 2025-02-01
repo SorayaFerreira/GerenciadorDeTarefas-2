@@ -27,3 +27,22 @@
     font-size: 16px;
     font-weight: bold;
   }
+
+.login-image{
+    width: 47.8%;
+}
+
+.login-container{
+    position: absolute;
+    margin-top: -42%;
+    margin-left: 20%;
+    width: 80%;
+    height: 80%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.body{
+    overflow: hidden;
+}
