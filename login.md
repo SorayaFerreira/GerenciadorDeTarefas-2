@@ -17,6 +17,11 @@ Permitir que usuários autenticados acessem recursos privados da aplicação.
 - Retorno `200 OK` com corpo `{ token: <jwt> }`.
 - Senhas armazenadas com **bcrypt**.
 
+
+## Se o usuário informar o e-mail e senha corretos, o sistema deverá **conceder** o acesso.
+
+
+
 ---
 
 > _Versão 1.0 – 6 jun 2025_
